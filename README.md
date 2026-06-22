@@ -37,10 +37,10 @@ No CPU-side memory copies between stages. The full RAW -> RGB pipeline runs in c
 
 ## Status
 
-Currently **Month 1, Week 2** of a 6-month plan. See [`docs/roadmap.md`](docs/roadmap.md).
+Currently **Month 1, Week 3** of a 6-month plan. See [`docs/roadmap.md`](docs/roadmap.md).
 
 - [x] Week 1 — Environment, toolchain, first DRM program
-- [ ] Week 2 — libcamera RAW10 capture
+- [x] Week 2 — libcamera uncompressed RAW (SBGGR16) capture from IMX708
 - [ ] Week 3 — DRM/KMS framebuffer to DSI
 - [ ] Week 4 — EGL + GLES triangle on DSI
 

@@ -38,8 +38,12 @@ Camera Module v3 (IMX708) → V3D GPU compute shader → DSI 顯示，
   - SSH、native build toolchain、`drm_info.c` 跑通
   - Waveshare DSI 設好（`vc4-kms-dsi-waveshare-panel,7_0_inchH`）、GT911 觸控 OK
   - Camera v3 overlay 設好（`imx708,cam0`，W2 才會實際抓圖驗證）
-- [ ] **目前在做：Month 1 Week 2 — libcamera 擷取 RAW10**
-- [ ] Month 1 Week 3：DRM/KMS 顯示 framebuffer
+- [x] Month 1 Week 2 — libcamera 擷取 RAW（2026-06-22 完成）
+  - 自寫 libcamera C++（`experiments/w2_libcamera_raw/capture_raw.cpp`）抓未壓縮 Bayer
+  - **關鍵發現**：RPi5/PiSP 強制壓縮 packed RAW10（COMP1），改要求 unpacked `SBGGR16`
+    才拿到未壓縮 Bayer；16-bit 為左對齊（10-bit 在高位 ×64），black level ≈ 64
+  - `raw_to_bmp.c` 轉灰階圖驗證成功（場景可辨，未 demosaic）；筆記見 `docs/notes_w2_libcamera.md`
+- [ ] **目前在做：Month 1 Week 3 — DRM/KMS 顯示 framebuffer**
 - [ ] Month 1 Week 4：EGL + GLES 跑三角形
 
 ## 之後 commit 進來的 repo 結構（規劃中）
