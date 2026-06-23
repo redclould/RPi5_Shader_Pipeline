@@ -9,6 +9,39 @@
 直接從 IMX708 抓 **未壓縮 16-bit Bayer**（4608×2592）存檔，再用 `raw_to_bmp.c`
 轉成灰階圖確認——場景清楚可辨，整條 sensor → userspace 路徑打通。
 
+## 為什麼抓 RAW Bayer，而不是 `.jpg`？（專案核心動機，面試開場題）
+
+平常按下快門拿到的 `.jpg`，**從來不是 sensor 直接給的**——它是 sensor 的 RAW 被
+**ISP（Image Signal Processor）** 全自動處理完再壓縮的「成品」。在 RPi5 上 ISP 就是
+vendor 的黑盒硬體 **PiSP**：
+
+```
+IMX708 ──> RAW Bayer ──>┌─ ISP（PiSP，黑盒，改不了）─┐──> .jpg
+（馬賽克/單色/10-bit）   │ demosaic → 黑階 → 白平衡   │   （成品）
+                        │ → CCM → denoise → tone     │
+                        │ → gamma → JPEG encode      │
+                        └────────────────────────────┘
+```
+
+本專案的賣點就是**把這個 ISP 黑盒拆掉，換成自己寫的 GPU compute shader**
+（CLAUDE.md：「繞過 vendor ISP，自己寫 demosaic / CCM / tone mapping」）：
+
+```
+IMX708 ──> RAW Bayer ──> 【自寫 GLSL shader（取代 ISP）】──> DSI 顯示
+```
+
+所以輸入**必須**是 ISP 之前的原料 = RAW Bayer，不能是 `.jpg`：
+
+- `.jpg` 代表 demosaic / 白平衡 / 色彩**已被 ISP 做完且不可逆**，JPEG 壓縮還是破壞性的
+  → 拿 jpg 就沒東西可給 shader 做了。
+- 要自己寫 demosaic，前提就是手上有**還沒 demosaic 的馬賽克資料**。
+- 這也是 GPU/camera firmware 的工作本質：處理 sensor **最原始**的輸出，而不是呼叫
+  別人的 `rpicam-still -o x.jpg`。
+
+W2 先「存成 `.raw`」只是把「拿到真正的原料」變成可驗證里程碑（轉圖看到場景 = 路通且
+資料對），同時逼自己看懂格式（Bayer 排列 / bit 深度 / stride / 左對齊）——Month 4
+寫 demosaic shader 時每一項都要用到。
+
 ## libcamera 物件關係（面試講得出來）
 
 ```
