@@ -43,8 +43,16 @@ Camera Module v3 (IMX708) → V3D GPU compute shader → DSI 顯示，
   - **關鍵發現**：RPi5/PiSP 強制壓縮 packed RAW10（COMP1），改要求 unpacked `SBGGR16`
     才拿到未壓縮 Bayer；16-bit 為左對齊（10-bit 在高位 ×64），black level ≈ 64
   - `raw_to_bmp.c` 轉灰階圖驗證成功（場景可辨，未 demosaic）；筆記見 `docs/notes_w2_libcamera.md`
-- [ ] **目前在做：Month 1 Week 3 — DRM/KMS 顯示 framebuffer**
-- [ ] Month 1 Week 4：EGL + GLES 跑三角形
+- [x] Month 1 Week 3 — DRM/KMS 顯示 framebuffer（2026-06-25 完成）
+  - 自寫 `experiments/w3_drm_modeset/modeset.c`：dumb buffer → `drmModeAddFB` → mmap
+    → CPU 畫漸層 → `drmModeSetCrtc` 直接點亮 DSI（不經 X/Wayland）
+  - **關鍵發現**：RPi5 顯示/繪圖拆成三顆獨立 DRM 裝置，且 `cardN` 編號開機浮動 →
+    DSI 在 `drm-rp1-dsi`（走 RP1，**不在 vc4**）、`v3d` 只 render 無 KMS、`vc4` 是 HDMI；
+    `modeset` 改成自動掃 `/dev/dri/card*` 找 KMS+connected
+  - **DSI 無 hot-plug detect**：connector 永遠報 `connected`（device tree 宣告，非電氣偵測）
+  - **DRM master 互斥**：須 `sudo systemctl stop lightdm`（labwc）釋放 master 才能 SetCrtc
+  - 漸層平滑無撕裂（pitch=5120 stride 正確）、四角顏色正確；筆記見 `docs/notes_w3_drm.md`
+- [ ] **目前在做：Month 1 Week 4：EGL + GLES 跑三角形**
 
 ## 之後 commit 進來的 repo 結構（規劃中）
 ```
